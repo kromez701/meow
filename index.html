@@ -28807,12 +28807,12 @@ SAVE $90</pre
 
           // Find all price elements for this variant
           const variantElement = document.querySelector(
-            `#deal-item--${variantId}`
+            "#deal-item--" + variantId
           );
           if (variantElement) {
-            // Update regular price elements
+            // Update regular price elements - be more aggressive about finding price elements
             const regularPrices = variantElement.querySelectorAll(
-              ".gp-money, .gp-price:not(.gp-product-compare-price)"
+              '.gp-money, .gp-price:not(.gp-product-compare-price), [class*="price"]'
             );
             regularPrices.forEach((priceEl) => {
               if (
@@ -28820,10 +28820,64 @@ SAVE $90</pre
                 priceEl.textContent.includes("$")
               ) {
                 priceEl.textContent = config.price;
+                // Force the price to stay by setting a custom attribute
+                priceEl.setAttribute("data-custom-price", config.price);
+                priceEl.setAttribute("data-price-locked", "true");
               }
             });
           }
         });
+      }
+
+      // Function to force price updates using MutationObserver
+      function forcePriceUpdates() {
+        // Create a mutation observer to watch for price changes
+        const observer = new MutationObserver(function (mutations) {
+          mutations.forEach(function (mutation) {
+            if (
+              mutation.type === "childList" ||
+              mutation.type === "characterData"
+            ) {
+              const target = mutation.target;
+
+              // Check if this is a price element that got changed
+              if (
+                target.classList &&
+                (target.classList.contains("gp-money") ||
+                  target.classList.contains("gp-price")) &&
+                target.getAttribute("data-price-locked") === "true"
+              ) {
+                const customPrice = target.getAttribute("data-custom-price");
+                if (customPrice && target.textContent !== customPrice) {
+                  target.textContent = customPrice;
+                }
+              }
+
+              // Also check parent elements
+              const priceElements = target.querySelectorAll
+                ? target.querySelectorAll('[data-price-locked="true"]')
+                : [];
+              priceElements.forEach((priceEl) => {
+                const customPrice = priceEl.getAttribute("data-custom-price");
+                if (customPrice && priceEl.textContent !== customPrice) {
+                  priceEl.textContent = customPrice;
+                }
+              });
+            }
+          });
+        });
+
+        // Start observing the entire bundle container
+        const bundleContainer = document.querySelector(
+          "gp-product-bundle-discount"
+        );
+        if (bundleContainer) {
+          observer.observe(bundleContainer, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+          });
+        }
       }
 
       // Function to handle variant selection
@@ -28844,7 +28898,7 @@ SAVE $90</pre
         });
 
         // Apply selection to chosen variant
-        const selectedItem = document.querySelector(`#deal-item--${variantId}`);
+        const selectedItem = document.querySelector("#deal-item--" + variantId);
         if (selectedItem) {
           selectedItem.setAttribute("data-selected", "true");
           selectedItem.style.background = "rgba(35, 33, 222, 0.06)";
@@ -28858,8 +28912,25 @@ SAVE $90</pre
           }
         }
 
+        // Force price update after selection change
+        setTimeout(function () {
+          updatePrices();
+        }, 100);
+
+        // Also force price update multiple times to be sure
+        setTimeout(function () {
+          updatePrices();
+        }, 300);
+
+        setTimeout(function () {
+          updatePrices();
+        }, 500);
+
         console.log(
-          `Selected variant: ${selectedVariant} - ${variantConfig[selectedVariant].name}`
+          "Selected variant: " +
+            selectedVariant +
+            " - " +
+            variantConfig[selectedVariant].name
         );
       }
 
@@ -28874,12 +28945,18 @@ SAVE $90</pre
         }
 
         console.log(
-          `Redirecting to: ${config.redirectUrl} for variant: ${config.name} (${config.price})`
+          "Redirecting to: " +
+            config.redirectUrl +
+            " for variant: " +
+            config.name +
+            " (" +
+            config.price +
+            ")"
         );
 
         // Check if URL is still placeholder
         if (config.redirectUrl.startsWith("EDIT_URL_FOR_")) {
-          alert(`Please edit the redirect URL for ${config.name} variant`);
+          alert("Please edit the redirect URL for " + config.name + " variant");
           return;
         }
 
@@ -28891,6 +28968,9 @@ SAVE $90</pre
       function initialize() {
         // Update all prices
         updatePrices();
+
+        // Start the mutation observer to prevent price changes
+        forcePriceUpdates();
 
         // Add click listeners to variant items
         document.querySelectorAll(".product-bundle-item").forEach((item) => {
@@ -28911,6 +28991,19 @@ SAVE $90</pre
         // Set initial selection (variant 3 as shown in HTML)
         handleVariantSelection(3);
 
+        // Set up interval to keep prices locked (backup method)
+        setInterval(function () {
+          const lockedPrices = document.querySelectorAll(
+            '[data-price-locked="true"]'
+          );
+          lockedPrices.forEach((priceEl) => {
+            const customPrice = priceEl.getAttribute("data-custom-price");
+            if (customPrice && priceEl.textContent !== customPrice) {
+              priceEl.textContent = customPrice;
+            }
+          });
+        }, 500);
+
         console.log("Product Bundle Handler initialized");
       }
 
@@ -28929,7 +29022,9 @@ SAVE $90</pre
     function updateRedirectUrl(variantId, newUrl) {
       if (window.bundleConfig && window.bundleConfig[variantId]) {
         window.bundleConfig[variantId].redirectUrl = newUrl;
-        console.log(`Updated variant ${variantId} redirect URL to: ${newUrl}`);
+        console.log(
+          "Updated variant " + variantId + " redirect URL to: " + newUrl
+        );
       } else {
         console.error("Invalid variant ID or configuration not found");
       }
