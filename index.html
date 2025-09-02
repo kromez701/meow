@@ -28380,8 +28380,6 @@ SAVE $90</pre
           deactivateVariant(item, variantNumber);
         }
       });
-
-      <!-- updateAllPrices(); -->
     }
 
     function selectVariant(variantNumber) {
@@ -28396,8 +28394,6 @@ SAVE $90</pre
           deactivateVariant(item, itemVariantNumber);
         }
       });
-
-      updateAllPrices();
 
       console.log(
         `Selected variant ${variantNumber}: £${productVariants[variantNumber].price}`
@@ -28434,64 +28430,6 @@ SAVE $90</pre
       item.setAttribute("aria-hidden", "true");
       item.removeAttribute("data-selected");
     }
-
-    <!-- function updateAllPrices() {
-      const variant = productVariants[selectedVariant];
-      const priceElements = document.querySelectorAll(".gp-price.gp-money");
-      priceElements.forEach((priceElement) => {
-        priceElement.textContent = `£${variant.price.toFixed(2)}`;
-      });
-
-      const comparePriceElements = document.querySelectorAll(
-        ".gp-product-compare-price"
-      );
-      comparePriceElements.forEach(() => {
-        let comparePrice;
-        switch (selectedVariant) {
-          case 1:
-            comparePrice = 29.95;
-            break;
-          case 2:
-            comparePrice = 49.9;
-            break;
-          case 3:
-            comparePrice = 74.85;
-            break;
-          default:
-            comparePrice = variant.price * 1.2;
-        }
-        comparePriceElements.forEach((compareElement) => {
-          compareElement.textContent = `£${comparePrice.toFixed(2)}`;
-        });
-      });
-    }
-
-    function setupCartRedirect() {
-      const addToCartButtons = document.querySelectorAll(
-        'button[data-id="gTC7xBR9wT"], .tcustomizer-submit-button'
-      );
-      addToCartButtons.forEach((button) => {
-        button.addEventListener("click", handleCartRedirect);
-      });
-
-      document.addEventListener(
-        "click",
-        function (event) {
-          const clickedElement = event.target;
-          const button = clickedElement.closest("button");
-
-          if (
-            button &&
-            (button.textContent.includes("ADD TO CART") ||
-              button.getAttribute("aria-label") === "ADD TO CART" ||
-              button.name === "add")
-          ) {
-            handleCartRedirect(event);
-          }
-        },
-        true
-      );
-    } -->
 
     function handleCartRedirect(event) {
       event.preventDefault();
