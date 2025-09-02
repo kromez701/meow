@@ -5276,6 +5276,40 @@
       data-shs="true"
       data-shs-beacon="true"
     ></script>
+    <script>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod
+            ? n.callMethod.apply(n, arguments)
+            : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(
+        window,
+        document,
+        "script",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      );
+      fbq("init", "1497972024708962");
+      fbq("track", "PageView");
+    </script>
+    <noscript
+      ><img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=1497972024708962&ev=PageView&noscript=1"
+    /></noscript>
   </head>
 
   <body class="gradient">
@@ -25106,9 +25140,7 @@ SAVE $90</pre
               <ul class="policies list-unstyled">
                 <li>
                   <small class="copyright__content"
-                    ><a href="/"
-                      >Privacy policy</a
-                    ></small
+                    ><a href="/">Privacy policy</a></small
                   >
                 </li>
                 <li>
@@ -25118,23 +25150,17 @@ SAVE $90</pre
                 </li>
                 <li>
                   <small class="copyright__content"
-                    ><a href="/"
-                      >Terms of service</a
-                    ></small
+                    ><a href="/">Terms of service</a></small
                   >
                 </li>
                 <li>
                   <small class="copyright__content"
-                    ><a href="/"
-                      >Contact information</a
-                    ></small
+                    ><a href="/">Contact information</a></small
                   >
                 </li>
                 <li>
                   <small class="copyright__content"
-                    ><a href="/"
-                      >Cookie preferences</a
-                    ></small
+                    ><a href="/">Cookie preferences</a></small
                   >
                 </li>
               </ul>
