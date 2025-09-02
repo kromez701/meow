@@ -28332,4 +28332,203 @@ SAVE $90</pre
 
     setInterval(replaceDollarInDOM, 300);
   </script>
+
+  <script>
+    // Product variant configuration with distinct URLs
+    const productVariants = {
+      1: {
+        price: 24.95,
+        quantity: 1,
+        description: "One Tub (50x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1", // Custom URL for variant 1
+      },
+      2: {
+        price: 47.41,
+        quantity: 2,
+        description: "Buy 2, Get 1 FREE (150x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1", // Custom URL for variant 2
+      },
+      3: {
+        price: 67.37,
+        quantity: 3,
+        description: "Buy 3, Get 3 FREE (300x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429535053:1", // Custom URL for variant 3
+      },
+    };
+
+    // State tracking
+    let selectedVariant = 2; // Default selection (most popular)
+
+    document.addEventListener("DOMContentLoaded", function () {
+      initializeVariantSelection();
+      setupCartRedirect();
+    });
+
+    function initializeVariantSelection() {
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+
+      variantItems.forEach((item, index) => {
+        const variantNumber = index + 1;
+
+        item.addEventListener("click", function () {
+          selectVariant(variantNumber);
+        });
+
+        if (variantNumber === selectedVariant) {
+          activateVariant(item, variantNumber);
+        } else {
+          deactivateVariant(item, variantNumber);
+        }
+      });
+
+      updateAllPrices();
+    }
+
+    function selectVariant(variantNumber) {
+      selectedVariant = variantNumber;
+
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+      variantItems.forEach((item, index) => {
+        const itemVariantNumber = index + 1;
+        if (itemVariantNumber === variantNumber) {
+          activateVariant(item, itemVariantNumber);
+        } else {
+          deactivateVariant(item, itemVariantNumber);
+        }
+      });
+
+      updateAllPrices();
+
+      console.log(
+        `Selected variant ${variantNumber}: £${productVariants[variantNumber].price}`
+      );
+    }
+
+    function activateVariant(item) {
+      item.style.backgroundColor = "rgba(35, 33, 222, 0.06)";
+      item.style.borderWidth = "3px";
+      item.style.borderColor = "#2321de";
+      item.style.boxShadow =
+        "2.4492935982947064e-16px 4px 12px 0px rgba(0, 0, 0, 0.20)";
+
+      const icon = item.querySelector("svg");
+      if (icon) {
+        icon.style.color = "#2321de";
+      }
+
+      item.removeAttribute("aria-hidden");
+      item.setAttribute("data-selected", "true");
+    }
+
+    function deactivateVariant(item) {
+      item.style.backgroundColor = "#00000000";
+      item.style.borderWidth = "1px";
+      item.style.borderColor = "#2321de";
+      item.style.boxShadow = "none";
+
+      const icon = item.querySelector("svg");
+      if (icon) {
+        icon.style.color = "#B4B4B4";
+      }
+
+      item.setAttribute("aria-hidden", "true");
+      item.removeAttribute("data-selected");
+    }
+
+    function updateAllPrices() {
+      const variant = productVariants[selectedVariant];
+      const priceElements = document.querySelectorAll(".gp-price.gp-money");
+      priceElements.forEach((priceElement) => {
+        priceElement.textContent = `£${variant.price.toFixed(2)}`;
+      });
+
+      const comparePriceElements = document.querySelectorAll(
+        ".gp-product-compare-price"
+      );
+      comparePriceElements.forEach(() => {
+        let comparePrice;
+        switch (selectedVariant) {
+          case 1:
+            comparePrice = 29.95;
+            break;
+          case 2:
+            comparePrice = 49.9;
+            break;
+          case 3:
+            comparePrice = 74.85;
+            break;
+          default:
+            comparePrice = variant.price * 1.2;
+        }
+        comparePriceElements.forEach((compareElement) => {
+          compareElement.textContent = `£${comparePrice.toFixed(2)}`;
+        });
+      });
+    }
+
+    function setupCartRedirect() {
+      const addToCartButtons = document.querySelectorAll(
+        'button[data-id="gTC7xBR9wT"], .tcustomizer-submit-button'
+      );
+      addToCartButtons.forEach((button) => {
+        button.addEventListener("click", handleCartRedirect);
+      });
+
+      document.addEventListener(
+        "click",
+        function (event) {
+          const clickedElement = event.target;
+          const button = clickedElement.closest("button");
+
+          if (
+            button &&
+            (button.textContent.includes("ADD TO CART") ||
+              button.getAttribute("aria-label") === "ADD TO CART" ||
+              button.name === "add")
+          ) {
+            handleCartRedirect(event);
+          }
+        },
+        true
+      );
+    }
+
+    function handleCartRedirect(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      const variant = productVariants[selectedVariant];
+      const fullRedirectUrl = variant.url; // Use the manual URL you set
+
+      console.log(`Redirecting to: ${fullRedirectUrl}`);
+      console.log(
+        `Selected variant: ${selectedVariant} - £${variant.price} (${variant.description})`
+      );
+
+      window.location.href = fullRedirectUrl;
+
+      setTimeout(() => {
+        window.location.assign(fullRedirectUrl);
+      }, 100);
+
+      setTimeout(() => {
+        window.location.replace(fullRedirectUrl);
+      }, 200);
+    }
+
+    function getCurrentSelection() {
+      const variant = productVariants[selectedVariant];
+      return {
+        variant: selectedVariant,
+        price: variant.price,
+        quantity: variant.quantity,
+        description: variant.description,
+        redirectUrl: variant.url,
+      };
+    }
+
+    console.log("Variant selection system initialized");
+    console.log("Default selection:", getCurrentSelection());
+  </script>
 </html>
