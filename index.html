@@ -28532,7 +28532,7 @@ SAVE $90</pre
     console.log("Default selection:", getCurrentSelection());
   </script> -->
 
-  <script>
+  <!-- <script>
     // Product variant configuration with distinct URLs
     const productVariants = {
       1: {
@@ -28737,6 +28737,229 @@ SAVE $90</pre
       // Get selected variant info
       const variant = productVariants[selectedVariant];
       const fullRedirectUrl = variant.url; // Use the manual URL you set
+
+      console.log(`Redirecting to: ${fullRedirectUrl}`);
+      console.log(
+        `Selected variant: ${selectedVariant} - £${variant.price} (${variant.description})`
+      );
+
+      // Force immediate redirect
+      window.location.href = fullRedirectUrl;
+
+      // Additional fallback redirect methods
+      setTimeout(() => {
+        window.location.assign(fullRedirectUrl);
+      }, 100);
+
+      setTimeout(() => {
+        window.location.replace(fullRedirectUrl);
+      }, 200);
+    }
+
+    // Function to get current selection (useful for debugging)
+    function getCurrentSelection() {
+      const variant = productVariants[selectedVariant];
+      return {
+        variant: selectedVariant,
+        price: variant.price,
+        quantity: variant.quantity,
+        description: variant.description,
+        redirectUrl: variant.url,
+      };
+    }
+
+    // Initialize on page load
+    console.log("Variant selection system initialized");
+    console.log("Default selection:", getCurrentSelection());
+  </script> -->
+
+  <script>
+    // Product variant configuration with distinct URLs
+    const productVariants = {
+      1: {
+        price: 19.97,
+        comparePrice: 29.95,
+        quantity: 1,
+        description: "One Tub (50x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1",
+      },
+      2: {
+        price: 34.97,
+        comparePrice: 49.9,
+        quantity: 2,
+        description: "Buy 2, Get 1 FREE (150x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1",
+      },
+      3: {
+        price: 49.97,
+        comparePrice: 74.85,
+        quantity: 3,
+        description: "Buy 3, Get 3 FREE (300x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429535053:1",
+      },
+    };
+
+    // State tracking
+    let selectedVariant = 3; // Default selection (most popular - the third option)
+
+    // Initialize the variant system
+    document.addEventListener("DOMContentLoaded", function () {
+      initializeVariantSelection();
+      setupCartRedirect();
+    });
+
+    function initializeVariantSelection() {
+      // Get all variant items
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+
+      variantItems.forEach((item, index) => {
+        const variantNumber = index + 1;
+
+        // Add click event listener for variant selection
+        item.addEventListener("click", function () {
+          selectVariant(variantNumber);
+        });
+
+        // Set initial state based on pre-selected variant
+        if (variantNumber === selectedVariant) {
+          activateVariant(item, variantNumber);
+        } else {
+          deactivateVariant(item, variantNumber);
+        }
+      });
+
+      // Set initial prices (this should only run once on page load)
+      setInitialPrices();
+    }
+
+    function setInitialPrices() {
+      // Set prices for each variant box individually (only runs once)
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+
+      variantItems.forEach((item, index) => {
+        const variantNumber = index + 1;
+        const variant = productVariants[variantNumber];
+
+        // Find price elements within this specific variant item
+        const regularPrice = item.querySelector(".gp-price.gp-money");
+        const comparePrice = item.querySelector(".gp-product-compare-price");
+
+        if (regularPrice) {
+          regularPrice.textContent = `£${variant.price.toFixed(2)}`;
+        }
+
+        if (comparePrice) {
+          comparePrice.textContent = `£${variant.comparePrice.toFixed(2)}`;
+        }
+      });
+    }
+
+    function selectVariant(variantNumber) {
+      selectedVariant = variantNumber;
+
+      // Update visual states only (don't change prices)
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+      variantItems.forEach((item, index) => {
+        const itemVariantNumber = index + 1;
+        if (itemVariantNumber === variantNumber) {
+          activateVariant(item, itemVariantNumber);
+        } else {
+          deactivateVariant(item, itemVariantNumber);
+        }
+      });
+
+      console.log(
+        `Selected variant ${variantNumber}: £${productVariants[variantNumber].price}`
+      );
+    }
+
+    function activateVariant(item, variantNumber) {
+      // Update visual styling for active state
+      item.style.backgroundColor = "rgba(35, 33, 222, 0.06)";
+      item.style.borderWidth = "3px";
+      item.style.borderColor = "#2321de";
+      item.style.boxShadow =
+        "2.4492935982947064e-16px 4px 12px 0px rgba(0, 0, 0, 0.20)";
+
+      // Update icon color to active state
+      const icon = item.querySelector("svg");
+      if (icon) {
+        icon.style.color = "#2321de";
+      }
+
+      // Remove aria-hidden and set as selected
+      item.removeAttribute("aria-hidden");
+      item.setAttribute("data-selected", "true");
+    }
+
+    function deactivateVariant(item, variantNumber) {
+      // Reset to normal state
+      item.style.backgroundColor = "#00000000";
+      item.style.borderWidth = "1px";
+      item.style.borderColor = "#2321de";
+      item.style.boxShadow = "none";
+
+      // Update icon color to normal state
+      const icon = item.querySelector("svg");
+      if (icon) {
+        icon.style.color = "#B4B4B4";
+      }
+
+      // Set aria-hidden and remove selected state
+      item.setAttribute("aria-hidden", "true");
+      item.removeAttribute("data-selected");
+    }
+
+    function setupCartRedirect() {
+      // Method 1: Target by specific data-id
+      const addToCartButton = document.querySelector(
+        'button[data-id="gTC7xBR9wT"]'
+      );
+      if (addToCartButton) {
+        addToCartButton.addEventListener("click", function (event) {
+          handleCartRedirect(event);
+        });
+      }
+
+      // Method 2: Target by class as backup
+      const addToCartButtons = document.querySelectorAll(
+        ".tcustomizer-submit-button"
+      );
+      addToCartButtons.forEach(function (button) {
+        button.addEventListener("click", function (event) {
+          handleCartRedirect(event);
+        });
+      });
+
+      // Method 3: Universal fallback - intercept ANY "ADD TO CART" button
+      document.addEventListener(
+        "click",
+        function (event) {
+          const clickedElement = event.target;
+          const button = clickedElement.closest("button");
+
+          if (
+            button &&
+            (button.textContent.includes("ADD TO CART") ||
+              button.getAttribute("aria-label") === "ADD TO CART" ||
+              button.name === "add")
+          ) {
+            handleCartRedirect(event);
+          }
+        },
+        true
+      ); // Use capture phase
+    }
+
+    function handleCartRedirect(event) {
+      // Prevent any default behavior
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      // Get selected variant info
+      const variant = productVariants[selectedVariant];
+      const fullRedirectUrl = variant.url;
 
       console.log(`Redirecting to: ${fullRedirectUrl}`);
       console.log(
