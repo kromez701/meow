@@ -28777,15 +28777,15 @@ SAVE $90</pre
     // Product variant configuration with distinct URLs
     const productVariants = {
       1: {
-        price: 19.97,
-        comparePrice: 29.95,
+        price: 49.97,
+        comparePrice: 74.85,
         quantity: 1,
         description: "One Tub (50x) Wipes",
         url: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1",
       },
       2: {
-        price: 34.97,
-        comparePrice: 49.9,
+        price: 49.97,
+        comparePrice: 74.85,
         quantity: 2,
         description: "Buy 2, Get 1 FREE (150x) Wipes",
         url: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1",
@@ -28804,13 +28804,19 @@ SAVE $90</pre
 
     // Initialize the variant system
     document.addEventListener("DOMContentLoaded", function () {
-      initializeVariantSelection();
-      setupCartRedirect();
+      // Wait for dynamic content to load
+      setTimeout(() => {
+        initializeVariantSelection();
+        setupCartRedirect();
+      }, 500);
     });
 
     function initializeVariantSelection() {
+      console.log("Initializing variant selection...");
+
       // Get all variant items
       const variantItems = document.querySelectorAll(".product-bundle-item");
+      console.log(`Found ${variantItems.length} variant items`);
 
       variantItems.forEach((item, index) => {
         const variantNumber = index + 1;
@@ -28828,34 +28834,111 @@ SAVE $90</pre
         }
       });
 
-      // Set initial prices (this should only run once on page load)
+      // Set initial prices with multiple attempts
       setInitialPrices();
+
+      // Try again after a delay in case content is still loading
+      setTimeout(() => {
+        setInitialPrices();
+      }, 1000);
     }
 
     function setInitialPrices() {
-      // Set prices for each variant box individually (only runs once)
+      console.log("Setting initial prices...");
+
+      // Set prices for each variant box individually
       const variantItems = document.querySelectorAll(".product-bundle-item");
 
       variantItems.forEach((item, index) => {
         const variantNumber = index + 1;
         const variant = productVariants[variantNumber];
 
-        // Find price elements within this specific variant item
-        const regularPrice = item.querySelector(".gp-price.gp-money");
-        const comparePrice = item.querySelector(".gp-product-compare-price");
+        console.log(`Processing variant ${variantNumber}:`, variant);
 
-        if (regularPrice) {
-          regularPrice.textContent = `£${variant.price.toFixed(2)}`;
+        // Multiple strategies to find and update price elements
+
+        // Strategy 1: Look for elements with specific classes
+        let regularPriceElements = item.querySelectorAll(
+          ".gp-money, .gp-price"
+        );
+        let comparePriceElements = item.querySelectorAll(
+          ".gp-product-compare-price"
+        );
+
+        // Strategy 2: Look for elements containing price text patterns
+        if (regularPriceElements.length === 0) {
+          regularPriceElements = item.querySelectorAll(
+            '[class*="price"], [class*="money"]'
+          );
         }
 
-        if (comparePrice) {
-          comparePrice.textContent = `£${variant.comparePrice.toFixed(2)}`;
+        if (comparePriceElements.length === 0) {
+          comparePriceElements = item.querySelectorAll('[class*="compare"]');
         }
+
+        // Strategy 3: Look for any div containing £ symbol
+        if (regularPriceElements.length === 0) {
+          const allDivs = item.querySelectorAll("div");
+          regularPriceElements = Array.from(allDivs).filter(
+            (div) =>
+              div.textContent.includes("£") &&
+              !div.textContent.includes("line-through")
+          );
+        }
+
+        if (comparePriceElements.length === 0) {
+          const allDivs = item.querySelectorAll("div");
+          comparePriceElements = Array.from(allDivs).filter(
+            (div) =>
+              div.textContent.includes("£") &&
+              (div.style.textDecorationLine === "line-through" ||
+                div.textContent.includes("line-through") ||
+                div.classList.toString().includes("compare"))
+          );
+        }
+
+        // Update regular prices (current/sale price)
+        regularPriceElements.forEach((element, elementIndex) => {
+          if (
+            element &&
+            !element.style.textDecorationLine?.includes("line-through")
+          ) {
+            const oldText = element.textContent;
+            element.textContent = `£${variant.price.toFixed(2)}`;
+            console.log(
+              `Updated regular price ${elementIndex} in variant ${variantNumber}: "${oldText}" -> "£${variant.price.toFixed(
+                2
+              )}"`
+            );
+          }
+        });
+
+        // Update compare prices (strikethrough prices)
+        comparePriceElements.forEach((element, elementIndex) => {
+          if (element) {
+            const oldText = element.textContent;
+            element.textContent = `£${variant.comparePrice.toFixed(2)}`;
+            console.log(
+              `Updated compare price ${elementIndex} in variant ${variantNumber}: "${oldText}" -> "£${variant.comparePrice.toFixed(
+                2
+              )}"`
+            );
+          }
+        });
+
+        // Force visibility of price containers
+        const priceContainers = item.querySelectorAll("gp-product-price");
+        priceContainers.forEach((container) => {
+          container.setAttribute("data-hidden", "false");
+          container.classList.remove("gp-hidden");
+        });
       });
     }
 
     function selectVariant(variantNumber) {
       selectedVariant = variantNumber;
+
+      console.log(`Variant ${variantNumber} selected`);
 
       // Update visual states only (don't change prices)
       const variantItems = document.querySelectorAll(".product-bundle-item");
@@ -28890,6 +28973,8 @@ SAVE $90</pre
       // Remove aria-hidden and set as selected
       item.removeAttribute("aria-hidden");
       item.setAttribute("data-selected", "true");
+
+      console.log(`Activated variant ${variantNumber}`);
     }
 
     function deactivateVariant(item, variantNumber) {
@@ -28908,6 +28993,8 @@ SAVE $90</pre
       // Set aria-hidden and remove selected state
       item.setAttribute("aria-hidden", "true");
       item.removeAttribute("data-selected");
+
+      console.log(`Deactivated variant ${variantNumber}`);
     }
 
     function setupCartRedirect() {
@@ -28949,6 +29036,8 @@ SAVE $90</pre
         },
         true
       ); // Use capture phase
+
+      console.log("Cart redirect handlers set up");
     }
 
     function handleCartRedirect(event) {
@@ -28991,8 +29080,35 @@ SAVE $90</pre
       };
     }
 
+    // Debug function to help identify price elements
+    function debugPriceElements() {
+      console.log("=== DEBUGGING PRICE ELEMENTS ===");
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+
+      variantItems.forEach((item, index) => {
+        console.log(`\nVariant ${index + 1}:`);
+
+        // Log all elements containing £
+        const elementsWithPound = item.querySelectorAll("*");
+        Array.from(elementsWithPound).forEach((el) => {
+          if (el.textContent.includes("£")) {
+            console.log(
+              `  Element with £: ${el.tagName}.${
+                el.className
+              } -> "${el.textContent.trim()}"`
+            );
+          }
+        });
+      });
+    }
+
     // Initialize on page load
     console.log("Variant selection system initialized");
-    console.log("Default selection:", getCurrentSelection());
+
+    // Run debug function after a delay
+    setTimeout(() => {
+      debugPriceElements();
+      console.log("Default selection:", getCurrentSelection());
+    }, 2000);
   </script>
 </html>
