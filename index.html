@@ -28381,7 +28381,7 @@ SAVE $90</pre
         }
       });
 
-      updateAllPrices();
+      <!-- updateAllPrices(); -->
     }
 
     function selectVariant(variantNumber) {
@@ -28435,7 +28435,7 @@ SAVE $90</pre
       item.removeAttribute("data-selected");
     }
 
-    function updateAllPrices() {
+    <!-- function updateAllPrices() {
       const variant = productVariants[selectedVariant];
       const priceElements = document.querySelectorAll(".gp-price.gp-money");
       priceElements.forEach((priceElement) => {
@@ -28491,7 +28491,7 @@ SAVE $90</pre
         },
         true
       );
-    }
+    } -->
 
     function handleCartRedirect(event) {
       event.preventDefault();
