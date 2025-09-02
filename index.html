@@ -28340,19 +28340,19 @@ SAVE $90</pre
         price: 24.95,
         quantity: 1,
         description: "One Tub (50x) Wipes",
-        url: "https://your-checkout-url.com/variant-1", // Custom URL for variant 1
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1", // Custom URL for variant 1
       },
       2: {
         price: 47.41,
         quantity: 2,
         description: "Buy 2, Get 1 FREE (150x) Wipes",
-        url: "https://your-checkout-url.com/variant-2", // Custom URL for variant 2
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1", // Custom URL for variant 2
       },
       3: {
         price: 67.37,
         quantity: 3,
         description: "Buy 3, Get 3 FREE (300x) Wipes",
-        url: "https://your-checkout-url.com/variant-3", // Custom URL for variant 3
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429535053:1", // Custom URL for variant 3
       },
     };
 
@@ -28437,13 +28437,13 @@ SAVE $90</pre
 
     function updateAllPrices() {
       const variant = productVariants[selectedVariant];
-      const priceElements = document.querySelectorAll(".gp-price.gp-money");
+      const priceElements = document.querySelectorAll(".gp-price.gp-money222");
       priceElements.forEach((priceElement) => {
         priceElement.textContent = `£${variant.price.toFixed(2)}`;
       });
 
       const comparePriceElements = document.querySelectorAll(
-        ".gp-product-compare-price"
+        ".gp-product-compare-price222"
       );
       comparePriceElements.forEach(() => {
         let comparePrice;
