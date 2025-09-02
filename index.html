@@ -28333,7 +28333,7 @@ SAVE $90</pre
     setInterval(replaceDollarInDOM, 30);
   </script>
 
-  <script>
+  <!-- <script>
     // Product variant configuration with distinct URLs
     const productVariants = {
       1: {
@@ -28528,6 +28528,247 @@ SAVE $90</pre
       };
     }
 
+    console.log("Variant selection system initialized");
+    console.log("Default selection:", getCurrentSelection());
+  </script> -->
+
+  <script>
+    // Product variant configuration with distinct URLs
+    const productVariants = {
+      1: {
+        price: 19.97,
+        quantity: 1,
+        description: "One Tub (50x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1", // Custom URL for variant 1
+      },
+      2: {
+        price: 34.97,
+        quantity: 2,
+        description: "Buy 2, Get 1 FREE (150x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1", // Custom URL for variant 2
+      },
+      3: {
+        price: 49.97,
+        quantity: 3,
+        description: "Buy 3, Get 3 FREE (300x) Wipes",
+        url: "https://n2kzpa-uw.myshopify.com/cart/52341429535053:1", // Custom URL for variant 3
+      },
+    };
+
+    // State tracking
+    let selectedVariant = 2; // Default selection (most popular)
+
+    // Initialize the variant system
+    document.addEventListener("DOMContentLoaded", function () {
+      initializeVariantSelection();
+      setupCartRedirect();
+    });
+
+    function initializeVariantSelection() {
+      // Get all variant items
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+
+      variantItems.forEach((item, index) => {
+        const variantNumber = index + 1;
+
+        // Add click event listener for variant selection
+        item.addEventListener("click", function () {
+          selectVariant(variantNumber);
+        });
+
+        // Set initial state based on pre-selected variant
+        if (variantNumber === selectedVariant) {
+          activateVariant(item, variantNumber);
+        } else {
+          deactivateVariant(item, variantNumber);
+        }
+      });
+
+      // Update initial prices
+      updateAllPrices();
+    }
+
+    function selectVariant(variantNumber) {
+      selectedVariant = variantNumber;
+
+      // Update visual states
+      const variantItems = document.querySelectorAll(".product-bundle-item");
+      variantItems.forEach((item, index) => {
+        const itemVariantNumber = index + 1;
+        if (itemVariantNumber === variantNumber) {
+          activateVariant(item, itemVariantNumber);
+        } else {
+          deactivateVariant(item, itemVariantNumber);
+        }
+      });
+
+      // Update prices
+      updateAllPrices();
+
+      console.log(
+        `Selected variant ${variantNumber}: £${productVariants[variantNumber].price}`
+      );
+    }
+
+    function activateVariant(item, variantNumber) {
+      // Update visual styling for active state
+      item.style.backgroundColor = "rgba(35, 33, 222, 0.06)";
+      item.style.borderWidth = "3px";
+      item.style.borderColor = "#2321de";
+      item.style.boxShadow =
+        "2.4492935982947064e-16px 4px 12px 0px rgba(0, 0, 0, 0.20)";
+
+      // Update icon color to active state
+      const icon = item.querySelector("svg");
+      if (icon) {
+        icon.style.color = "#2321de";
+      }
+
+      // Remove aria-hidden and set as selected
+      item.removeAttribute("aria-hidden");
+      item.setAttribute("data-selected", "true");
+    }
+
+    function deactivateVariant(item, variantNumber) {
+      // Reset to normal state
+      item.style.backgroundColor = "#00000000";
+      item.style.borderWidth = "1px";
+      item.style.borderColor = "#2321de";
+      item.style.boxShadow = "none";
+
+      // Update icon color to normal state
+      const icon = item.querySelector("svg");
+      if (icon) {
+        icon.style.color = "#B4B4B4";
+      }
+
+      // Set aria-hidden and remove selected state
+      item.setAttribute("aria-hidden", "true");
+      item.removeAttribute("data-selected");
+    }
+
+    function updateAllPrices() {
+      const variant = productVariants[selectedVariant];
+
+      // Update all regular price elements (current/sale price)
+      const priceElements = document.querySelectorAll(".gp-price.gp-money");
+      priceElements.forEach((priceElement) => {
+        priceElement.textContent = `£${variant.price.toFixed(2)}`;
+      });
+
+      // Update compare prices (crossed out/strikethrough prices)
+      const comparePriceElements = document.querySelectorAll(
+        ".gp-product-compare-price"
+      );
+      comparePriceElements.forEach((compareElement) => {
+        let comparePrice;
+        switch (selectedVariant) {
+          case 1:
+            comparePrice = 29.95; // Higher than 19.97
+            break;
+          case 2:
+            comparePrice = 49.9; // Higher than 34.97
+            break;
+          case 3:
+            comparePrice = 74.85; // Higher than 49.97
+            break;
+          default:
+            comparePrice = variant.price * 1.2;
+        }
+        compareElement.textContent = `£${comparePrice.toFixed(2)}`;
+      });
+
+      // Force visibility of price elements (in case they were hidden)
+      document
+        .querySelectorAll("gp-product-price")
+        .forEach((priceContainer) => {
+          priceContainer.setAttribute("data-hidden", "false");
+          priceContainer.classList.remove("gp-hidden");
+        });
+    }
+
+    function setupCartRedirect() {
+      // Method 1: Target by specific data-id
+      const addToCartButton = document.querySelector(
+        'button[data-id="gTC7xBR9wT"]'
+      );
+      if (addToCartButton) {
+        addToCartButton.addEventListener("click", function (event) {
+          handleCartRedirect(event);
+        });
+      }
+
+      // Method 2: Target by class as backup
+      const addToCartButtons = document.querySelectorAll(
+        ".tcustomizer-submit-button"
+      );
+      addToCartButtons.forEach(function (button) {
+        button.addEventListener("click", function (event) {
+          handleCartRedirect(event);
+        });
+      });
+
+      // Method 3: Universal fallback - intercept ANY "ADD TO CART" button
+      document.addEventListener(
+        "click",
+        function (event) {
+          const clickedElement = event.target;
+          const button = clickedElement.closest("button");
+
+          if (
+            button &&
+            (button.textContent.includes("ADD TO CART") ||
+              button.getAttribute("aria-label") === "ADD TO CART" ||
+              button.name === "add")
+          ) {
+            handleCartRedirect(event);
+          }
+        },
+        true
+      ); // Use capture phase
+    }
+
+    function handleCartRedirect(event) {
+      // Prevent any default behavior
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      // Get selected variant info
+      const variant = productVariants[selectedVariant];
+      const fullRedirectUrl = variant.url; // Use the manual URL you set
+
+      console.log(`Redirecting to: ${fullRedirectUrl}`);
+      console.log(
+        `Selected variant: ${selectedVariant} - £${variant.price} (${variant.description})`
+      );
+
+      // Force immediate redirect
+      window.location.href = fullRedirectUrl;
+
+      // Additional fallback redirect methods
+      setTimeout(() => {
+        window.location.assign(fullRedirectUrl);
+      }, 100);
+
+      setTimeout(() => {
+        window.location.replace(fullRedirectUrl);
+      }, 200);
+    }
+
+    // Function to get current selection (useful for debugging)
+    function getCurrentSelection() {
+      const variant = productVariants[selectedVariant];
+      return {
+        variant: selectedVariant,
+        price: variant.price,
+        quantity: variant.quantity,
+        description: variant.description,
+        redirectUrl: variant.url,
+      };
+    }
+
+    // Initialize on page load
     console.log("Variant selection system initialized");
     console.log("Default selection:", getCurrentSelection());
   </script>
