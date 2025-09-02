@@ -28774,341 +28774,165 @@ SAVE $90</pre
   </script> -->
 
   <script>
-    // Product variant configuration with distinct URLs
-    const productVariants = {
-      1: {
-        price: 49.97,
-        comparePrice: 74.85,
-        quantity: 1,
-        description: "One Tub (50x) Wipes",
-        url: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1",
-      },
-      2: {
-        price: 49.97,
-        comparePrice: 74.85,
-        quantity: 2,
-        description: "Buy 2, Get 1 FREE (150x) Wipes",
-        url: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1",
-      },
-      3: {
-        price: 49.97,
-        comparePrice: 74.85,
-        quantity: 3,
-        description: "Buy 3, Get 3 FREE (300x) Wipes",
-        url: "https://n2kzpa-uw.myshopify.com/cart/52341429535053:1",
-      },
-    };
+    // Product Bundle Variant Handler with Custom Pricing and Redirects
+    (function () {
+      "use strict";
 
-    // State tracking
-    let selectedVariant = 3; // Default selection (most popular - the third option)
-
-    // Initialize the variant system
-    document.addEventListener("DOMContentLoaded", function () {
-      // Wait for dynamic content to load
-      setTimeout(() => {
-        initializeVariantSelection();
-        setupCartRedirect();
-      }, 500);
-    });
-
-    function initializeVariantSelection() {
-      console.log("Initializing variant selection...");
-
-      // Get all variant items
-      const variantItems = document.querySelectorAll(".product-bundle-item");
-      console.log(`Found ${variantItems.length} variant items`);
-
-      variantItems.forEach((item, index) => {
-        const variantNumber = index + 1;
-
-        // Add click event listener for variant selection
-        item.addEventListener("click", function () {
-          selectVariant(variantNumber);
-        });
-
-        // Set initial state based on pre-selected variant
-        if (variantNumber === selectedVariant) {
-          activateVariant(item, variantNumber);
-        } else {
-          deactivateVariant(item, variantNumber);
-        }
-      });
-
-      // Set initial prices with multiple attempts
-      setInitialPrices();
-
-      // Try again after a delay in case content is still loading
-      setTimeout(() => {
-        setInitialPrices();
-      }, 1000);
-    }
-
-    function setInitialPrices() {
-      console.log("Setting initial prices...");
-
-      // Set prices for each variant box individually
-      const variantItems = document.querySelectorAll(".product-bundle-item");
-
-      variantItems.forEach((item, index) => {
-        const variantNumber = index + 1;
-        const variant = productVariants[variantNumber];
-
-        console.log(`Processing variant ${variantNumber}:`, variant);
-
-        // Multiple strategies to find and update price elements
-
-        // Strategy 1: Look for elements with specific classes
-        let regularPriceElements = item.querySelectorAll(
-          ".gp-money, .gp-price"
-        );
-        let comparePriceElements = item.querySelectorAll(
-          ".gp-product-compare-price"
-        );
-
-        // Strategy 2: Look for elements containing price text patterns
-        if (regularPriceElements.length === 0) {
-          regularPriceElements = item.querySelectorAll(
-            '[class*="price"], [class*="money"]'
-          );
-        }
-
-        if (comparePriceElements.length === 0) {
-          comparePriceElements = item.querySelectorAll('[class*="compare"]');
-        }
-
-        // Strategy 3: Look for any div containing £ symbol
-        if (regularPriceElements.length === 0) {
-          const allDivs = item.querySelectorAll("div");
-          regularPriceElements = Array.from(allDivs).filter(
-            (div) =>
-              div.textContent.includes("£") &&
-              !div.textContent.includes("line-through")
-          );
-        }
-
-        if (comparePriceElements.length === 0) {
-          const allDivs = item.querySelectorAll("div");
-          comparePriceElements = Array.from(allDivs).filter(
-            (div) =>
-              div.textContent.includes("£") &&
-              (div.style.textDecorationLine === "line-through" ||
-                div.textContent.includes("line-through") ||
-                div.classList.toString().includes("compare"))
-          );
-        }
-
-        // Update regular prices (current/sale price)
-        regularPriceElements.forEach((element, elementIndex) => {
-          if (
-            element &&
-            !element.style.textDecorationLine?.includes("line-through")
-          ) {
-            const oldText = element.textContent;
-            element.textContent = `£${variant.price.toFixed(2)}`;
-            console.log(
-              `Updated regular price ${elementIndex} in variant ${variantNumber}: "${oldText}" -> "£${variant.price.toFixed(
-                2
-              )}"`
-            );
-          }
-        });
-
-        // Update compare prices (strikethrough prices)
-        comparePriceElements.forEach((element, elementIndex) => {
-          if (element) {
-            const oldText = element.textContent;
-            element.textContent = `£${variant.comparePrice.toFixed(2)}`;
-            console.log(
-              `Updated compare price ${elementIndex} in variant ${variantNumber}: "${oldText}" -> "£${variant.comparePrice.toFixed(
-                2
-              )}"`
-            );
-          }
-        });
-
-        // Force visibility of price containers
-        const priceContainers = item.querySelectorAll("gp-product-price");
-        priceContainers.forEach((container) => {
-          container.setAttribute("data-hidden", "false");
-          container.classList.remove("gp-hidden");
-        });
-      });
-    }
-
-    function selectVariant(variantNumber) {
-      selectedVariant = variantNumber;
-
-      console.log(`Variant ${variantNumber} selected`);
-
-      // Update visual states only (don't change prices)
-      const variantItems = document.querySelectorAll(".product-bundle-item");
-      variantItems.forEach((item, index) => {
-        const itemVariantNumber = index + 1;
-        if (itemVariantNumber === variantNumber) {
-          activateVariant(item, itemVariantNumber);
-        } else {
-          deactivateVariant(item, itemVariantNumber);
-        }
-      });
-
-      console.log(
-        `Selected variant ${variantNumber}: £${productVariants[variantNumber].price}`
-      );
-    }
-
-    function activateVariant(item, variantNumber) {
-      // Update visual styling for active state
-      item.style.backgroundColor = "rgba(35, 33, 222, 0.06)";
-      item.style.borderWidth = "3px";
-      item.style.borderColor = "#2321de";
-      item.style.boxShadow =
-        "2.4492935982947064e-16px 4px 12px 0px rgba(0, 0, 0, 0.20)";
-
-      // Update icon color to active state
-      const icon = item.querySelector("svg");
-      if (icon) {
-        icon.style.color = "#2321de";
-      }
-
-      // Remove aria-hidden and set as selected
-      item.removeAttribute("aria-hidden");
-      item.setAttribute("data-selected", "true");
-
-      console.log(`Activated variant ${variantNumber}`);
-    }
-
-    function deactivateVariant(item, variantNumber) {
-      // Reset to normal state
-      item.style.backgroundColor = "#00000000";
-      item.style.borderWidth = "1px";
-      item.style.borderColor = "#2321de";
-      item.style.boxShadow = "none";
-
-      // Update icon color to normal state
-      const icon = item.querySelector("svg");
-      if (icon) {
-        icon.style.color = "#B4B4B4";
-      }
-
-      // Set aria-hidden and remove selected state
-      item.setAttribute("aria-hidden", "true");
-      item.removeAttribute("data-selected");
-
-      console.log(`Deactivated variant ${variantNumber}`);
-    }
-
-    function setupCartRedirect() {
-      // Method 1: Target by specific data-id
-      const addToCartButton = document.querySelector(
-        'button[data-id="gTC7xBR9wT"]'
-      );
-      if (addToCartButton) {
-        addToCartButton.addEventListener("click", function (event) {
-          handleCartRedirect(event);
-        });
-      }
-
-      // Method 2: Target by class as backup
-      const addToCartButtons = document.querySelectorAll(
-        ".tcustomizer-submit-button"
-      );
-      addToCartButtons.forEach(function (button) {
-        button.addEventListener("click", function (event) {
-          handleCartRedirect(event);
-        });
-      });
-
-      // Method 3: Universal fallback - intercept ANY "ADD TO CART" button
-      document.addEventListener(
-        "click",
-        function (event) {
-          const clickedElement = event.target;
-          const button = clickedElement.closest("button");
-
-          if (
-            button &&
-            (button.textContent.includes("ADD TO CART") ||
-              button.getAttribute("aria-label") === "ADD TO CART" ||
-              button.name === "add")
-          ) {
-            handleCartRedirect(event);
-          }
+      // Configuration object for variants
+      const variantConfig = {
+        1: {
+          price: "£19.97",
+          redirectUrl: "EDIT_URL_FOR_1_TUB", // Replace with your desired URL
+          name: "One Tub",
         },
-        true
-      ); // Use capture phase
-
-      console.log("Cart redirect handlers set up");
-    }
-
-    function handleCartRedirect(event) {
-      // Prevent any default behavior
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-
-      // Get selected variant info
-      const variant = productVariants[selectedVariant];
-      const fullRedirectUrl = variant.url;
-
-      console.log(`Redirecting to: ${fullRedirectUrl}`);
-      console.log(
-        `Selected variant: ${selectedVariant} - £${variant.price} (${variant.description})`
-      );
-
-      // Force immediate redirect
-      window.location.href = fullRedirectUrl;
-
-      // Additional fallback redirect methods
-      setTimeout(() => {
-        window.location.assign(fullRedirectUrl);
-      }, 100);
-
-      setTimeout(() => {
-        window.location.replace(fullRedirectUrl);
-      }, 200);
-    }
-
-    // Function to get current selection (useful for debugging)
-    function getCurrentSelection() {
-      const variant = productVariants[selectedVariant];
-      return {
-        variant: selectedVariant,
-        price: variant.price,
-        quantity: variant.quantity,
-        description: variant.description,
-        redirectUrl: variant.url,
+        2: {
+          price: "£34.97",
+          redirectUrl: "EDIT_URL_FOR_BUY_2", // Replace with your desired URL
+          name: "Buy 2, Get 1 FREE",
+        },
+        3: {
+          price: "£49.97",
+          redirectUrl: "EDIT_URL_FOR_BUY_3", // Replace with your desired URL
+          name: "Buy 3, Get 3 FREE",
+        },
       };
-    }
 
-    // Debug function to help identify price elements
-    function debugPriceElements() {
-      console.log("=== DEBUGGING PRICE ELEMENTS ===");
-      const variantItems = document.querySelectorAll(".product-bundle-item");
+      let selectedVariant = 3; // Default to variant 3 as shown in HTML
 
-      variantItems.forEach((item, index) => {
-        console.log(`\nVariant ${index + 1}:`);
+      // Function to update prices for all variants
+      function updatePrices() {
+        // Update prices for each variant
+        Object.keys(variantConfig).forEach((variantId) => {
+          const config = variantConfig[variantId];
 
-        // Log all elements containing £
-        const elementsWithPound = item.querySelectorAll("*");
-        Array.from(elementsWithPound).forEach((el) => {
-          if (el.textContent.includes("£")) {
-            console.log(
-              `  Element with £: ${el.tagName}.${
-                el.className
-              } -> "${el.textContent.trim()}"`
+          // Find all price elements for this variant
+          const variantElement = document.querySelector(
+            `#deal-item--${variantId}`
+          );
+          if (variantElement) {
+            // Update regular price elements
+            const regularPrices = variantElement.querySelectorAll(
+              ".gp-money, .gp-price:not(.gp-product-compare-price)"
             );
+            regularPrices.forEach((priceEl) => {
+              if (
+                priceEl.textContent.includes("£") ||
+                priceEl.textContent.includes("$")
+              ) {
+                priceEl.textContent = config.price;
+              }
+            });
           }
         });
-      });
+      }
+
+      // Function to handle variant selection
+      function handleVariantSelection(variantId) {
+        selectedVariant = parseInt(variantId);
+
+        // Remove selection from all variants
+        document.querySelectorAll(".product-bundle-item").forEach((item) => {
+          item.removeAttribute("data-selected");
+          item.style.background = "rgba(0, 0, 0, 0)";
+          item.style.borderWidth = "1px";
+
+          // Reset icon color
+          const icon = item.querySelector("svg");
+          if (icon) {
+            icon.style.color = "rgb(180, 180, 180)";
+          }
+        });
+
+        // Apply selection to chosen variant
+        const selectedItem = document.querySelector(`#deal-item--${variantId}`);
+        if (selectedItem) {
+          selectedItem.setAttribute("data-selected", "true");
+          selectedItem.style.background = "rgba(35, 33, 222, 0.06)";
+          selectedItem.style.borderWidth = "3px";
+          selectedItem.style.borderColor = "rgb(35, 33, 222)";
+
+          // Update icon color
+          const icon = selectedItem.querySelector("svg");
+          if (icon) {
+            icon.style.color = "rgb(35, 33, 222)";
+          }
+        }
+
+        console.log(
+          `Selected variant: ${selectedVariant} - ${variantConfig[selectedVariant].name}`
+        );
+      }
+
+      // Function to handle add to cart click
+      function handleAddToCart(event) {
+        event.preventDefault();
+
+        const config = variantConfig[selectedVariant];
+        if (!config) {
+          console.error("Invalid variant selected:", selectedVariant);
+          return;
+        }
+
+        console.log(
+          `Redirecting to: ${config.redirectUrl} for variant: ${config.name} (${config.price})`
+        );
+
+        // Check if URL is still placeholder
+        if (config.redirectUrl.startsWith("EDIT_URL_FOR_")) {
+          alert(`Please edit the redirect URL for ${config.name} variant`);
+          return;
+        }
+
+        // Redirect to the configured URL
+        window.location.href = config.redirectUrl;
+      }
+
+      // Initialize the system when DOM is ready
+      function initialize() {
+        // Update all prices
+        updatePrices();
+
+        // Add click listeners to variant items
+        document.querySelectorAll(".product-bundle-item").forEach((item) => {
+          item.addEventListener("click", function () {
+            const variantId = this.id.split("--")[1];
+            handleVariantSelection(variantId);
+          });
+        });
+
+        // Add click listener to add to cart button
+        const addToCartButton = document.querySelector(
+          '.gp-button-atc, button[name="add"]'
+        );
+        if (addToCartButton) {
+          addToCartButton.addEventListener("click", handleAddToCart);
+        }
+
+        // Set initial selection (variant 3 as shown in HTML)
+        handleVariantSelection(3);
+
+        console.log("Product Bundle Handler initialized");
+      }
+
+      // Wait for DOM to be ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initialize);
+      } else {
+        initialize();
+      }
+
+      // Expose configuration for easy editing
+      window.bundleConfig = variantConfig;
+    })();
+
+    // Helper function to update redirect URLs (can be called from console)
+    function updateRedirectUrl(variantId, newUrl) {
+      if (window.bundleConfig && window.bundleConfig[variantId]) {
+        window.bundleConfig[variantId].redirectUrl = newUrl;
+        console.log(`Updated variant ${variantId} redirect URL to: ${newUrl}`);
+      } else {
+        console.error("Invalid variant ID or configuration not found");
+      }
     }
-
-    // Initialize on page load
-    console.log("Variant selection system initialized");
-
-    // Run debug function after a delay
-    setTimeout(() => {
-      debugPriceElements();
-      console.log("Default selection:", getCurrentSelection());
-    }, 2000);
   </script>
 </html>
