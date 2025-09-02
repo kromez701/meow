@@ -28773,7 +28773,7 @@ SAVE $90</pre
     console.log("Default selection:", getCurrentSelection());
   </script> -->
 
-  <script>
+  <!-- <script>
     // Product Bundle Variant Handler with Custom Pricing and Redirects
     (function () {
       "use strict";
@@ -29003,6 +29003,276 @@ SAVE $90</pre
             }
           });
         }, 500);
+
+        console.log("Product Bundle Handler initialized");
+      }
+
+      // Wait for DOM to be ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initialize);
+      } else {
+        initialize();
+      }
+
+      // Expose configuration for easy editing
+      window.bundleConfig = variantConfig;
+    })();
+
+    // Helper function to update redirect URLs (can be called from console)
+    function updateRedirectUrl(variantId, newUrl) {
+      if (window.bundleConfig && window.bundleConfig[variantId]) {
+        window.bundleConfig[variantId].redirectUrl = newUrl;
+        console.log(
+          "Updated variant " + variantId + " redirect URL to: " + newUrl
+        );
+      } else {
+        console.error("Invalid variant ID or configuration not found");
+      }
+    }
+  </script> -->
+
+  <script>
+    // Product Bundle Variant Handler with Custom Pricing and Redirects
+    (function () {
+      "use strict";
+
+      // Configuration object for variants
+      const variantConfig = {
+        1: {
+          price: "£19.97",
+          redirectUrl: "EDIT_URL_FOR_1_TUB", // Replace with your desired URL
+          name: "One Tub",
+        },
+        2: {
+          price: "£34.97",
+          redirectUrl: "EDIT_URL_FOR_BUY_2", // Replace with your desired URL
+          name: "Buy 2, Get 1 FREE",
+        },
+        3: {
+          price: "£49.97",
+          redirectUrl: "EDIT_URL_FOR_BUY_3", // Replace with your desired URL
+          name: "Buy 3, Get 3 FREE",
+        },
+      };
+
+      let selectedVariant = 3; // Default to variant 3 as shown in HTML
+
+      // Function to update prices for all variants
+      function updatePrices() {
+        // Update prices for each variant
+        Object.keys(variantConfig).forEach((variantId) => {
+          const config = variantConfig[variantId];
+
+          // Find all price elements for this variant
+          const variantElement = document.querySelector(
+            "#deal-item--" + variantId
+          );
+          if (variantElement) {
+            // Find price elements more specifically to avoid duplicates
+            const regularPrices = variantElement.querySelectorAll(
+              ".gp-money:not([data-price-updated]), .gp-price:not(.gp-product-compare-price):not([data-price-updated])"
+            );
+
+            regularPrices.forEach((priceEl) => {
+              // Only update elements that contain currency symbols and haven't been updated yet
+              if (
+                (priceEl.textContent.includes("£") ||
+                  priceEl.textContent.includes("$")) &&
+                !priceEl.hasAttribute("data-price-updated")
+              ) {
+                priceEl.textContent = config.price;
+                // Mark as updated to prevent duplicates
+                priceEl.setAttribute("data-price-updated", "true");
+                priceEl.setAttribute("data-custom-price", config.price);
+                priceEl.setAttribute("data-price-locked", "true");
+
+                // Ensure text color remains visible (fix white text issue)
+                priceEl.style.color = "inherit";
+                priceEl.style.opacity = "1";
+
+                // Remove any conflicting styles that might make text white
+                priceEl.style.removeProperty("color");
+                const computedStyle = window.getComputedStyle(priceEl);
+                if (
+                  computedStyle.color === "rgb(255, 255, 255)" ||
+                  computedStyle.color === "white"
+                ) {
+                  priceEl.style.color = "#000000";
+                }
+              }
+            });
+          }
+        });
+      }
+
+      // Function to handle variant selection
+      function handleVariantSelection(variantId) {
+        selectedVariant = parseInt(variantId);
+
+        // Remove selection from all variants
+        document.querySelectorAll(".product-bundle-item").forEach((item) => {
+          item.removeAttribute("data-selected");
+          item.style.background = "rgba(0, 0, 0, 0)";
+          item.style.borderWidth = "1px";
+
+          // Reset icon color
+          const icon = item.querySelector("svg");
+          if (icon) {
+            icon.style.color = "rgb(180, 180, 180)";
+          }
+        });
+
+        // Apply selection to chosen variant
+        const selectedItem = document.querySelector("#deal-item--" + variantId);
+        if (selectedItem) {
+          selectedItem.setAttribute("data-selected", "true");
+          selectedItem.style.background = "rgba(35, 33, 222, 0.06)";
+          selectedItem.style.borderWidth = "3px";
+          selectedItem.style.borderColor = "rgb(35, 33, 222)";
+
+          // Update icon color
+          const icon = selectedItem.querySelector("svg");
+          if (icon) {
+            icon.style.color = "rgb(35, 33, 222)";
+          }
+        }
+
+        // Clear previous price updates to allow re-updating
+        document
+          .querySelectorAll('[data-price-updated="true"]')
+          .forEach((el) => {
+            el.removeAttribute("data-price-updated");
+          });
+
+        // Force price update after selection change
+        setTimeout(function () {
+          updatePrices();
+        }, 100);
+
+        console.log(
+          "Selected variant: " +
+            selectedVariant +
+            " - " +
+            variantConfig[selectedVariant].name
+        );
+      }
+
+      // Function to handle add to cart click
+      function handleAddToCart(event) {
+        event.preventDefault();
+
+        const config = variantConfig[selectedVariant];
+        if (!config) {
+          console.error("Invalid variant selected:", selectedVariant);
+          return;
+        }
+
+        console.log(
+          "Redirecting to: " +
+            config.redirectUrl +
+            " for variant: " +
+            config.name +
+            " (" +
+            config.price +
+            ")"
+        );
+
+        // Check if URL is still placeholder
+        if (config.redirectUrl.startsWith("EDIT_URL_FOR_")) {
+          alert("Please edit the redirect URL for " + config.name + " variant");
+          return;
+        }
+
+        // Redirect to the configured URL
+        window.location.href = config.redirectUrl;
+      }
+
+      // Simplified mutation observer to prevent external price changes
+      function setupPriceProtection() {
+        const observer = new MutationObserver(function (mutations) {
+          mutations.forEach(function (mutation) {
+            if (
+              mutation.type === "characterData" ||
+              mutation.type === "childList"
+            ) {
+              const target = mutation.target;
+
+              // Check if a locked price element was modified
+              if (
+                target.nodeType === Node.TEXT_NODE &&
+                target.parentElement &&
+                target.parentElement.getAttribute("data-price-locked") ===
+                  "true"
+              ) {
+                const customPrice =
+                  target.parentElement.getAttribute("data-custom-price");
+                if (customPrice && target.textContent !== customPrice) {
+                  target.textContent = customPrice;
+                }
+              }
+            }
+          });
+        });
+
+        // Observe the bundle container
+        const bundleContainer = document.querySelector(
+          "gp-product-bundle-discount"
+        );
+        if (bundleContainer) {
+          observer.observe(bundleContainer, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+          });
+        }
+      }
+
+      // Initialize the system when DOM is ready
+      function initialize() {
+        // Update all prices
+        updatePrices();
+
+        // Set up price protection
+        setupPriceProtection();
+
+        // Add click listeners to variant items
+        document.querySelectorAll(".product-bundle-item").forEach((item) => {
+          item.addEventListener("click", function () {
+            const variantId = this.id.split("--")[1];
+            handleVariantSelection(variantId);
+          });
+        });
+
+        // Add click listener to add to cart button
+        const addToCartButton = document.querySelector(
+          '.gp-button-atc, button[name="add"]'
+        );
+        if (addToCartButton) {
+          addToCartButton.addEventListener("click", handleAddToCart);
+        }
+
+        // Set initial selection (variant 3 as shown in HTML)
+        handleVariantSelection(3);
+
+        // Periodic check to ensure prices stay correct (less aggressive)
+        setInterval(function () {
+          const lockedPrices = document.querySelectorAll(
+            '[data-price-locked="true"]'
+          );
+          lockedPrices.forEach((priceEl) => {
+            const customPrice = priceEl.getAttribute("data-custom-price");
+            if (customPrice && priceEl.textContent !== customPrice) {
+              priceEl.textContent = customPrice;
+              // Ensure visibility
+              if (
+                priceEl.style.color === "white" ||
+                priceEl.style.color === "rgb(255, 255, 255)"
+              ) {
+                priceEl.style.color = "#000000";
+              }
+            }
+          });
+        }, 2000); // Less frequent updates
 
         console.log("Product Bundle Handler initialized");
       }
