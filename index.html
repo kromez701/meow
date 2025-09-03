@@ -29120,9 +29120,7 @@ SAVE $90</pre
           );
 
           if (variantElement) {
-            const priceEls = variantElement.querySelectorAll(
-              ".gp-price, .gp-money"
-            );
+            const priceEls = variantElement.querySelectorAll(".gp-money");
 
             priceEls.forEach((el) => {
               // Only replace once
