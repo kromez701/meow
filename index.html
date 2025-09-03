@@ -526,6 +526,9 @@
         display: inline-block;
         width: 100%;
       }
+      .gp-price.gp-money {
+        visibility: hidden;
+      }
 
       #shopify-buyer-consent.hidden {
         display: none;
@@ -29084,6 +29087,7 @@ SAVE $90</pre
                 !priceEl.hasAttribute("data-price-updated")
               ) {
                 priceEl.textContent = config.price;
+                priceEl.style.visibility = "visible";
                 // Mark as updated to prevent duplicates
                 priceEl.setAttribute("data-price-updated", "true");
                 priceEl.setAttribute("data-custom-price", config.price);
@@ -29221,6 +29225,7 @@ SAVE $90</pre
             childList: true,
             subtree: true,
             characterData: true,
+            attributes: true,
           });
         }
       }
