@@ -29082,12 +29082,12 @@ SAVE $90</pre
             regularPrices.forEach((priceEl) => {
               // Only update elements that contain currency symbols and haven't been updated yet
               if (
-                (priceEl.textContent.includes("£") ||
-                  priceEl.textContent.includes("$")) &&
-                !priceEl.hasAttribute("data-price-updated")
+                priceEl.textContent.includes("£") ||
+                priceEl.textContent.includes("$")
               ) {
                 priceEl.textContent = config.price;
                 priceEl.style.visibility = "visible";
+
                 // Mark as updated to prevent duplicates
                 priceEl.setAttribute("data-price-updated", "true");
                 priceEl.setAttribute("data-custom-price", config.price);
@@ -29147,9 +29147,8 @@ SAVE $90</pre
         // Clear previous price updates to allow re-updating
 
         // Force price update after selection change
-        setTimeout(function () {
-          updatePrices();
-        }, 100);
+
+        updatePrices();
 
         console.log(
           "Selected variant: " +
