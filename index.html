@@ -28328,8 +28328,6 @@ SAVE $90</pre
           node.textContent = node.textContent.replace(/\$/g, "£");
         }
       }
-
-      console.log("work");
     }
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -29037,6 +29035,42 @@ SAVE $90</pre
     }
   </script> -->
 
+  <script>
+    // Function to permanently replace Shopify price elements
+    function lockAndUpdatePrices() {
+      Object.keys(variantConfig).forEach((variantId) => {
+        const config = variantConfig[variantId];
+        const variantElement = document.querySelector(
+          "#deal-item--" + variantId
+        );
+
+        if (variantElement) {
+          const priceEls = variantElement.querySelectorAll(
+            ".gp-price, .gp-money"
+          );
+
+          priceEls.forEach((el) => {
+            // Only replace once
+            if (!el.hasAttribute("data-locked-replacement")) {
+              const clone = document.createElement("span");
+              clone.className = el.className;
+              clone.setAttribute("data-price-locked", "true");
+              clone.setAttribute("data-locked-replacement", "true");
+              clone.setAttribute("data-custom-price", config.price);
+              clone.textContent = config.price;
+              clone.style.color = "#000000";
+
+              el.replaceWith(clone);
+            } else {
+              // If already replaced, just update it
+              el.textContent = config.price;
+              el.setAttribute("data-custom-price", config.price);
+            }
+          });
+        }
+      });
+    }
+  </script>
   <script>
     // Product Bundle Variant Handler with Custom Pricing and Redirects
     (function () {
