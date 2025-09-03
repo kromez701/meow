@@ -29086,6 +29086,7 @@ SAVE $90</pre
                 priceEl.textContent.includes("$")
               ) {
                 priceEl.textContent = config.price;
+                console.log("true", priceEl);
                 priceEl.style.visibility = "visible";
 
                 // Mark as updated to prevent duplicates
