@@ -29034,7 +29034,7 @@ SAVE $90</pre
     }
   </script> -->
 
-  <script>
+  <!-- <script>
     // Product Bundle Variant Handler with Custom Pricing and Redirects
     (function () {
       "use strict";
@@ -29286,6 +29286,385 @@ SAVE $90</pre
       } else {
         initialize();
       }
+
+      // Expose configuration for easy editing
+      window.bundleConfig = variantConfig;
+    })();
+
+    // Helper function to update redirect URLs (can be called from console)
+    function updateRedirectUrl(variantId, newUrl) {
+      if (window.bundleConfig && window.bundleConfig[variantId]) {
+        window.bundleConfig[variantId].redirectUrl = newUrl;
+        console.log(
+          "Updated variant " + variantId + " redirect URL to: " + newUrl
+        );
+      } else {
+        console.error("Invalid variant ID or configuration not found");
+      }
+    }
+  </script> -->
+
+  <script>
+    // Product Bundle Variant Handler with Custom Pricing and Redirects - No Flicker Version
+    (function () {
+      "use strict";
+
+      // Configuration object for variants
+      const variantConfig = {
+        1: {
+          price: "£19.97",
+          redirectUrl: "https://n2kzpa-uw.myshopify.com/cart/52341429469517:1", // Replace with your desired URL
+          name: "One Tub",
+        },
+        2: {
+          price: "£34.97",
+          redirectUrl: "https://n2kzpa-uw.myshopify.com/cart/52341429502285:1", // Replace with your desired URL
+          name: "Buy 2, Get 1 FREE",
+        },
+        3: {
+          price: "£49.97",
+          redirectUrl: "https://n2kzpa-uw.myshopify.com/cart/52341429535053:1", // Replace with your desired URL
+          name: "Buy 3, Get 3 FREE",
+        },
+      };
+
+      let selectedVariant = 3; // Default to variant 3 as shown in HTML
+      let priceStylesInjected = false;
+
+      // Inject CSS to immediately hide price elements to prevent flicker
+      function hidePricesImmediately() {
+        if (priceStylesInjected) return;
+
+        const style = document.createElement("style");
+        style.id = "price-flicker-prevention";
+        style.textContent = `
+          .gp-money:not([data-price-locked]),
+          .gp-price:not(.gp-product-compare-price):not([data-price-locked]) {
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+          [data-price-locked="true"] {
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+        `;
+        document.head.appendChild(style);
+        priceStylesInjected = true;
+      }
+
+      // Remove the hiding styles once all prices are updated
+      function showUpdatedPrices() {
+        setTimeout(() => {
+          const hideStyle = document.getElementById("price-flicker-prevention");
+          if (hideStyle) {
+            hideStyle.remove();
+            priceStylesInjected = false;
+          }
+        }, 100);
+      }
+
+      // Function to update prices for all variants - more aggressive approach
+      function updatePrices() {
+        console.log("Updating prices...");
+
+        // Update prices for each variant
+        Object.keys(variantConfig).forEach((variantId) => {
+          const config = variantConfig[variantId];
+
+          // Find all price elements for this variant
+          const variantElement = document.querySelector(
+            "#deal-item--" + variantId
+          );
+          if (variantElement) {
+            // Find all possible price selectors more aggressively
+            const priceSelectors = [
+              ".gp-money",
+              ".gp-price:not(.gp-product-compare-price)",
+              '[data-testid*="price"]',
+              ".price",
+              ".money",
+            ];
+
+            priceSelectors.forEach((selector) => {
+              const priceElements = variantElement.querySelectorAll(selector);
+
+              priceElements.forEach((priceEl) => {
+                // Check if it's a price element (contains currency or numbers)
+                const text = priceEl.textContent.trim();
+                if (
+                  (text.includes("£") ||
+                    text.includes("$") ||
+                    /\d+\.\d+/.test(text)) &&
+                  !priceEl.classList.contains("gp-product-compare-price") &&
+                  !priceEl.hasAttribute("data-price-locked")
+                ) {
+                  // Immediately lock and update the price
+                  priceEl.setAttribute("data-price-locked", "true");
+                  priceEl.setAttribute("data-custom-price", config.price);
+                  priceEl.textContent = config.price;
+
+                  // Ensure visibility and styling
+                  priceEl.style.visibility = "visible";
+                  priceEl.style.opacity = "1";
+                  priceEl.style.color = "inherit";
+
+                  // Remove any conflicting styles
+                  const computedStyle = window.getComputedStyle(priceEl);
+                  if (
+                    computedStyle.color === "rgb(255, 255, 255)" ||
+                    computedStyle.color === "white"
+                  ) {
+                    priceEl.style.color = "#000000";
+                  }
+
+                  console.log(
+                    `Updated price for variant ${variantId}: ${config.price}`
+                  );
+                }
+              });
+            });
+          }
+        });
+      }
+
+      // More aggressive mutation observer to immediately catch and revert price changes
+      function setupAggressivePriceProtection() {
+        const observer = new MutationObserver(function (mutations) {
+          mutations.forEach(function (mutation) {
+            // Handle text changes
+            if (mutation.type === "characterData") {
+              const target = mutation.target;
+              if (
+                target.nodeType === Node.TEXT_NODE &&
+                target.parentElement &&
+                target.parentElement.getAttribute("data-price-locked") ===
+                  "true"
+              ) {
+                const customPrice =
+                  target.parentElement.getAttribute("data-custom-price");
+                if (customPrice && target.textContent !== customPrice) {
+                  target.textContent = customPrice;
+                }
+              }
+            }
+
+            // Handle DOM changes
+            if (mutation.type === "childList") {
+              mutation.addedNodes.forEach(function (node) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  // Check if new price elements were added
+                  const newPriceElements = node.querySelectorAll
+                    ? node.querySelectorAll(
+                        ".gp-money, .gp-price:not(.gp-product-compare-price)"
+                      )
+                    : [];
+
+                  newPriceElements.forEach((priceEl) => {
+                    if (!priceEl.getAttribute("data-price-locked")) {
+                      // Find which variant this belongs to
+                      const variantElement = priceEl.closest(
+                        '[id*="deal-item--"]'
+                      );
+                      if (variantElement) {
+                        const variantId = variantElement.id.split("--")[1];
+                        const config = variantConfig[variantId];
+                        if (config) {
+                          priceEl.setAttribute("data-price-locked", "true");
+                          priceEl.setAttribute(
+                            "data-custom-price",
+                            config.price
+                          );
+                          priceEl.textContent = config.price;
+                          priceEl.style.visibility = "visible";
+                          priceEl.style.opacity = "1";
+                        }
+                      }
+                    }
+                  });
+                }
+              });
+            }
+
+            // Handle attribute changes that might affect prices
+            if (mutation.type === "attributes") {
+              const target = mutation.target;
+              if (target.getAttribute("data-price-locked") === "true") {
+                const customPrice = target.getAttribute("data-custom-price");
+                if (customPrice && target.textContent !== customPrice) {
+                  target.textContent = customPrice;
+                }
+              }
+            }
+          });
+        });
+
+        // Observe the entire document for changes
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ["class", "data-price", "data-variant"],
+        });
+
+        return observer;
+      }
+
+      // Function to handle variant selection with immediate price lock
+      function handleVariantSelection(variantId) {
+        selectedVariant = parseInt(variantId);
+
+        // Immediately hide prices to prevent flicker during selection
+        hidePricesImmediately();
+
+        // Remove selection from all variants
+        document.querySelectorAll(".product-bundle-item").forEach((item) => {
+          item.removeAttribute("data-selected");
+          item.style.background = "rgba(0, 0, 0, 0)";
+          item.style.borderWidth = "1px";
+
+          // Reset icon color
+          const icon = item.querySelector("svg");
+          if (icon) {
+            icon.style.color = "rgb(180, 180, 180)";
+          }
+        });
+
+        // Apply selection to chosen variant
+        const selectedItem = document.querySelector("#deal-item--" + variantId);
+        if (selectedItem) {
+          selectedItem.setAttribute("data-selected", "true");
+          selectedItem.style.background = "rgba(35, 33, 222, 0.06)";
+          selectedItem.style.borderWidth = "3px";
+          selectedItem.style.borderColor = "rgb(35, 33, 222)";
+
+          // Update icon color
+          const icon = selectedItem.querySelector("svg");
+          if (icon) {
+            icon.style.color = "rgb(35, 33, 222)";
+          }
+        }
+
+        // Immediately update prices without clearing locks
+        setTimeout(function () {
+          updatePrices();
+          showUpdatedPrices();
+        }, 10);
+
+        console.log(
+          "Selected variant: " +
+            selectedVariant +
+            " - " +
+            variantConfig[selectedVariant].name
+        );
+      }
+
+      // Function to handle add to cart click
+      function handleAddToCart(event) {
+        event.preventDefault();
+
+        const config = variantConfig[selectedVariant];
+        if (!config) {
+          console.error("Invalid variant selected:", selectedVariant);
+          return;
+        }
+
+        console.log(
+          "Redirecting to: " +
+            config.redirectUrl +
+            " for variant: " +
+            config.name +
+            " (" +
+            config.price +
+            ")"
+        );
+
+        // Check if URL is still placeholder
+        if (config.redirectUrl.startsWith("EDIT_URL_FOR_")) {
+          alert("Please edit the redirect URL for " + config.name + " variant");
+          return;
+        }
+
+        // Redirect to the configured URL
+        window.location.href = config.redirectUrl;
+      }
+
+      // Initialize the system when DOM is ready
+      function initialize() {
+        console.log("Initializing bundle handler...");
+
+        // Immediately hide prices to prevent any flicker
+        hidePricesImmediately();
+
+        // Update all prices immediately
+        updatePrices();
+
+        // Set up aggressive price protection
+        setupAggressivePriceProtection();
+
+        // Add click listeners to variant items
+        document.querySelectorAll(".product-bundle-item").forEach((item) => {
+          item.addEventListener("click", function () {
+            const variantId = this.id.split("--")[1];
+            handleVariantSelection(variantId);
+          });
+        });
+
+        // Add click listener to add to cart button
+        const addToCartButton = document.querySelector(
+          '.gp-button-atc, button[name="add"]'
+        );
+        if (addToCartButton) {
+          addToCartButton.addEventListener("click", handleAddToCart);
+        }
+
+        // Set initial selection (variant 3 as shown in HTML)
+        handleVariantSelection(3);
+
+        // Show updated prices after everything is set up
+        showUpdatedPrices();
+
+        // Very aggressive periodic check to ensure prices stay correct
+        setInterval(function () {
+          const lockedPrices = document.querySelectorAll(
+            '[data-price-locked="true"]'
+          );
+          lockedPrices.forEach((priceEl) => {
+            const customPrice = priceEl.getAttribute("data-custom-price");
+            if (customPrice && priceEl.textContent !== customPrice) {
+              priceEl.textContent = customPrice;
+              // Ensure visibility
+              priceEl.style.visibility = "visible";
+              priceEl.style.opacity = "1";
+              if (
+                priceEl.style.color === "white" ||
+                priceEl.style.color === "rgb(255, 255, 255)"
+              ) {
+                priceEl.style.color = "#000000";
+              }
+            }
+          });
+        }, 500); // More frequent updates
+
+        console.log("Product Bundle Handler initialized");
+      }
+
+      // Run immediately if DOM is already loaded, otherwise wait
+      if (document.readyState === "loading") {
+        // If still loading, inject styles immediately
+        hidePricesImmediately();
+        document.addEventListener("DOMContentLoaded", initialize);
+      } else {
+        initialize();
+      }
+
+      // Also run on window load as backup
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          updatePrices();
+          showUpdatedPrices();
+        }, 100);
+      });
 
       // Expose configuration for easy editing
       window.bundleConfig = variantConfig;
