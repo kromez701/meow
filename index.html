@@ -29036,42 +29036,6 @@ SAVE $90</pre
   </script> -->
 
   <script>
-    // Function to permanently replace Shopify price elements
-    function lockAndUpdatePrices() {
-      Object.keys(variantConfig).forEach((variantId) => {
-        const config = variantConfig[variantId];
-        const variantElement = document.querySelector(
-          "#deal-item--" + variantId
-        );
-
-        if (variantElement) {
-          const priceEls = variantElement.querySelectorAll(
-            ".gp-price, .gp-money"
-          );
-
-          priceEls.forEach((el) => {
-            // Only replace once
-            if (!el.hasAttribute("data-locked-replacement")) {
-              const clone = document.createElement("span");
-              clone.className = el.className;
-              clone.setAttribute("data-price-locked", "true");
-              clone.setAttribute("data-locked-replacement", "true");
-              clone.setAttribute("data-custom-price", config.price);
-              clone.textContent = config.price;
-              clone.style.color = "#000000";
-
-              el.replaceWith(clone);
-            } else {
-              // If already replaced, just update it
-              el.textContent = config.price;
-              el.setAttribute("data-custom-price", config.price);
-            }
-          });
-        }
-      });
-    }
-  </script>
-  <script>
     // Product Bundle Variant Handler with Custom Pricing and Redirects
     (function () {
       "use strict";
@@ -29147,6 +29111,40 @@ SAVE $90</pre
         });
       }
 
+      function lockAndUpdatePrices() {
+        Object.keys(variantConfig).forEach((variantId) => {
+          const config = variantConfig[variantId];
+          const variantElement = document.querySelector(
+            "#deal-item--" + variantId
+          );
+
+          if (variantElement) {
+            const priceEls = variantElement.querySelectorAll(
+              ".gp-price, .gp-money"
+            );
+
+            priceEls.forEach((el) => {
+              // Only replace once
+              if (!el.hasAttribute("data-locked-replacement")) {
+                const clone = document.createElement("span");
+                clone.className = el.className;
+                clone.setAttribute("data-price-locked", "true");
+                clone.setAttribute("data-locked-replacement", "true");
+                clone.setAttribute("data-custom-price", config.price);
+                clone.textContent = config.price;
+                clone.style.color = "#000000";
+
+                el.replaceWith(clone);
+              } else {
+                // If already replaced, just update it
+                el.textContent = config.price;
+                el.setAttribute("data-custom-price", config.price);
+              }
+            });
+          }
+        });
+      }
+
       // Function to handle variant selection
       function handleVariantSelection(variantId) {
         selectedVariant = parseInt(variantId);
@@ -29182,7 +29180,7 @@ SAVE $90</pre
         // Clear previous price updates to allow re-updating
 
         // Force price update after selection change
-
+        lockAndUpdatePrices();
         console.log(
           "Selected variant: " +
             selectedVariant +
@@ -29265,10 +29263,9 @@ SAVE $90</pre
       // Initialize the system when DOM is ready
       function initialize() {
         // Update all prices
-        updatePrices();
+        lockAndUpdatePrices();
 
         // Set up price protection
-        setupPriceProtection();
 
         // Add click listeners to variant items
         document.querySelectorAll(".product-bundle-item").forEach((item) => {
@@ -29290,24 +29287,6 @@ SAVE $90</pre
         handleVariantSelection(3);
 
         // Periodic check to ensure prices stay correct (less aggressive)
-        setInterval(function () {
-          const lockedPrices = document.querySelectorAll(
-            '[data-price-locked="true"]'
-          );
-          lockedPrices.forEach((priceEl) => {
-            const customPrice = priceEl.getAttribute("data-custom-price");
-            if (customPrice && priceEl.textContent !== customPrice) {
-              priceEl.textContent = customPrice;
-              // Ensure visibility
-              if (
-                priceEl.style.color === "white" ||
-                priceEl.style.color === "rgb(255, 255, 255)"
-              ) {
-                priceEl.style.color = "#000000";
-              }
-            }
-          });
-        }, 2000); // Less frequent updates
 
         console.log("Product Bundle Handler initialized");
       }
