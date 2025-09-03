@@ -29141,11 +29141,6 @@ SAVE $90</pre
         }
 
         // Clear previous price updates to allow re-updating
-        document
-          .querySelectorAll('[data-price-updated="true"]')
-          .forEach((el) => {
-            el.removeAttribute("data-price-updated");
-          });
 
         // Force price update after selection change
         setTimeout(function () {
